@@ -1,54 +1,145 @@
-// src/app/articles/[slug]/page.tsx
-import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 type Article = {
   id: string;
   title: string;
   description?: string | null;
   content: string;
-  image?: string | null;
   slug: string;
+  image?: string | null;
+  image_url?:string | null;
   category?: string | null;
-  domain?: string | null;
+  tags?: string[] | null;
   created_at?: string | null;
 };
 
-const ArticlePage=async({ params }: { params: { slug: string } }) =>{
+function formatDate(dateStr?: string | null) {
+  if (!dateStr) return "";
+  try {
+    return new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(
+      new Date(dateStr)
+    );
+  } catch {
+    return "";
+  }
+}
+
+export const revalidate = 60; // ISR: régénère au max toutes les 60s
+
+export default async function ArticlePage({
+  params,
+}: {
+   params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params; 
   const { data, error } = await supabase
     .from("articles")
-    .select("*")
-    .eq("slug", params.slug)
+    .select(
+      "id, title, description, content, slug, image, image_url, category, tags, created_at"
+    )
+    .eq("slug", slug)
     .eq("status", "published")
+    .limit(1)
     .maybeSingle();
 
-  if (error || !data) return notFound();
+  if (error) {
+    console.error("[Server] Supabase error:", error.message);
+    notFound();
+  }
+  if (!data) notFound();
 
-  const a = data as Article;
+  const a = data as unknown as Article;
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-8">
-      <article>
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold">{a.title}</h1>
-          {a.image ? (
-            <img
-              src={a.image}
-              alt={a.title}
-              className="w-full h-64 object-cover rounded-lg mt-4"
-            />
-          ) : null}
-          {a.description ? (
-            <p className="mt-4 text-gray-700">{a.description}</p>
-          ) : null}
-        </header>
+    <main className="mx-auto max-w-3xl px-6 py-12">
+      {/* breadcrumb */}
+      <div className="mb-6 text-sm text-neutral-500">
+        <Link href="/articles" className="hover:underline">
+          Articles
+        </Link>{" "}
+        / <span className="text-neutral-700">{a.title}</span>
+      </div>
 
-        <div
-          className="prose prose-neutral max-w-none"
-          dangerouslySetInnerHTML={{ __html: a.content }}
-        />
-      </article>
+      {/* title */}
+      <h1 className="text-4xl font-extrabold tracking-tight text-neutral-900">
+        {a.title}
+      </h1>
+
+      {/* meta */}
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+        {a.category && (
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            {a.category}
+          </span>
+        )}
+        {a.created_at && (
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            Publié le {formatDate(a.created_at)}
+          </span>
+        )}
+      </div>
+
+      {/* cover */}
+
+      {(() => {
+  return null;
+})()}
+{(a.image_url || a.image) && (
+  <div className="relative mt-8 h-64 w-full overflow-hidden rounded-2xl">
+    <Image
+      src={a.image_url || a.image || '/assets/default.webp'}  
+      alt={a.title}
+      fill
+      className="object-cover"
+      sizes="(max-width: 768px) 100vw, 768px"
+      priority={false}
+    />
+  </div>
+)}
+
+      {/* content (HTML) */}
+     <article className="prose prose-neutral mt-8 max-w-none">
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    // rehypeRaw permet d’interpréter le HTML présent dans le markdown
+    // rehypeSanitize évite les injections XSS
+    rehypePlugins={[rehypeRaw, rehypeSanitize]}
+  >
+    {a.content}
+  </ReactMarkdown>
+</article>
+
+
+      {/* tags */}
+      {a.tags && a.tags.length > 0 && (
+        <div className="mt-10 flex flex-wrap gap-2">
+          {a.tags.map((t) => (
+            <span
+              key={t}
+              className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-sm text-neutral-700"
+            >
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* back link */}
+      <div className="mt-12">
+        <Link
+          href="/articles"
+          className="inline-flex items-center gap-2 text-neutral-900 hover:text-neutral-600"
+        >
+          ← Retour aux articles
+        </Link>
+      </div>
     </main>
   );
 }
-export default ArticlePage
