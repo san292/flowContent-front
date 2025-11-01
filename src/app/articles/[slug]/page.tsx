@@ -14,7 +14,7 @@ type Article = {
   content: string;
   slug: string;
   image?: string | null;
-  image_url?:string | null;
+  image_url?: string | null;
   category?: string | null;
   tags?: string[] | null;
   created_at?: string | null;
@@ -36,9 +36,9 @@ export const revalidate = 60; // ISR: régénère au max toutes les 60s
 export default async function ArticlePage({
   params,
 }: {
-   params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params; 
+  const { slug } = await params;
   const { data, error } = await supabase
     .from("articles")
     .select(
@@ -89,33 +89,32 @@ export default async function ArticlePage({
       {/* cover */}
 
       {(() => {
-  return null;
-})()}
-{(a.image_url || a.image) && (
-  <div className="relative mt-8 h-64 w-full overflow-hidden rounded-2xl">
-    <Image
-      src={a.image_url || a.image || '/assets/default.webp'}  
-      alt={a.title}
-      fill
-      className="object-cover"
-      sizes="(max-width: 768px) 100vw, 768px"
-      priority={false}
-    />
-  </div>
-)}
+        return null;
+      })()}
+      {(a.image_url || a.image) && (
+        <div className="relative mt-8 h-64 w-full overflow-hidden rounded-2xl">
+          <Image
+            src={a.image_url || a.image || "/assets/default.webp"}
+            alt={a.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 768px"
+            priority={false}
+          />
+        </div>
+      )}
 
       {/* content (HTML) */}
-     <article className="prose prose-neutral mt-8 max-w-none">
-  <ReactMarkdown
-    remarkPlugins={[remarkGfm]}
-    // rehypeRaw permet d’interpréter le HTML présent dans le markdown
-    // rehypeSanitize évite les injections XSS
-    rehypePlugins={[rehypeRaw, rehypeSanitize]}
-  >
-    {a.content}
-  </ReactMarkdown>
-</article>
-
+      <article className="prose prose-neutral mt-8 max-w-none">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          // rehypeRaw permet d’interpréter le HTML présent dans le markdown
+          // rehypeSanitize évite les injections XSS
+          rehypePlugins={[rehypeRaw, rehypeSanitize]}
+        >
+          {a.content}
+        </ReactMarkdown>
+      </article>
 
       {/* tags */}
       {a.tags && a.tags.length > 0 && (

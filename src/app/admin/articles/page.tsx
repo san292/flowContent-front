@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -22,7 +22,7 @@ type Article = {
 
 type FilterType = "all" | "published" | "draft" | "pending";
 
-const ArticlesManagement=()=> {
+const ArticlesManagement = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,10 +32,6 @@ const ArticlesManagement=()=> {
   useEffect(() => {
     fetchArticles();
   }, []);
-
-  useEffect(() => {
-    filterArticles();
-  }, [articles, filter, searchTerm]);
 
   const fetchArticles = async () => {
     try {
@@ -53,32 +49,38 @@ const ArticlesManagement=()=> {
     }
   };
 
-  const filterArticles = () => {
-    let filtered = articles;
+  const filterArticles = useCallback(() => {
+  let filtered = articles;
 
-    // Filtrer par statut
-    if (filter !== "all") {
-      filtered = filtered.filter(article => article.status === filter);
-    }
+  // Filtrer par statut
+  if (filter !== "all") {
+    filtered = filtered.filter((article) => article.status === filter);
+  }
 
-    // Filtrer par recherche
-    if (searchTerm) {
-      filtered = filtered.filter(article =>
+  // Filtrer par recherche
+  if (searchTerm) {
+    filtered = filtered.filter(
+      (article) =>
         article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.description
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         article.topic?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.original_topic?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+        article.original_topic
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
+    );
+  }
 
-    setFilteredArticles(filtered);
-  };
+  setFilteredArticles(filtered);
+}, [articles, filter, searchTerm]);
 
   const updateArticleStatus = async (id: string, newStatus: string) => {
     try {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const updates: any = { status: newStatus };
-      
-      if (newStatus === 'published') {
+
+      if (newStatus === "published") {
         updates.published_at = new Date().toISOString();
       }
 
@@ -90,11 +92,17 @@ const ArticlesManagement=()=> {
       if (error) throw error;
 
       // Mettre à jour localement
-      setArticles(prev => prev.map(article => 
-        article.id === id 
-          ? { ...article, status: newStatus, published_at: updates.published_at || article.published_at }
-          : article
-      ));
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === id
+            ? {
+                ...article,
+                status: newStatus,
+                published_at: updates.published_at || article.published_at,
+              }
+            : article
+        )
+      );
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
     }
@@ -104,14 +112,11 @@ const ArticlesManagement=()=> {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) return;
 
     try {
-      const { error } = await supabase
-        .from("articles")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("articles").delete().eq("id", id);
 
       if (error) throw error;
 
-      setArticles(prev => prev.filter(article => article.id !== id));
+      setArticles((prev) => prev.filter((article) => article.id !== id));
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
@@ -138,9 +143,9 @@ const ArticlesManagement=()=> {
   const getStatusCounts = () => {
     return {
       all: articles.length,
-      published: articles.filter(a => a.status === 'published').length,
-      draft: articles.filter(a => a.status === 'draft').length,
-      pending: articles.filter(a => a.status === 'pending').length,
+      published: articles.filter((a) => a.status === "published").length,
+      draft: articles.filter((a) => a.status === "draft").length,
+      pending: articles.filter((a) => a.status === "pending").length,
     };
   };
 
@@ -165,12 +170,24 @@ const ArticlesManagement=()=> {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link href="/admin" className="text-gray-400 hover:text-gray-600">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Gestion des articles</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Gestion des articles
+                </h1>
                 <p className="mt-1 text-sm text-gray-500">
                   {filteredArticles.length} article(s) affiché(s)
                 </p>
@@ -193,7 +210,10 @@ const ArticlesManagement=()=> {
           <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
             {[
               { key: "all", label: `Tous (${statusCounts.all})` },
-              { key: "published", label: `Publiés (${statusCounts.published})` },
+              {
+                key: "published",
+                label: `Publiés (${statusCounts.published})`,
+              },
               { key: "draft", label: `Brouillons (${statusCounts.draft})` },
               { key: "pending", label: `En attente (${statusCounts.pending})` },
             ].map(({ key, label }) => (
@@ -249,7 +269,9 @@ const ArticlesManagement=()=> {
                           {article.title}
                         </h3>
                         <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(article.status)}`}
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(
+                            article.status
+                          )}`}
                         >
                           {article.status}
                         </span>
@@ -273,43 +295,51 @@ const ArticlesManagement=()=> {
                         )}
                         <span>Créé: {formatDate(article.created_at)}</span>
                         {article.published_at && (
-                          <span>Publié: {formatDate(article.published_at)}</span>
+                          <span>
+                            Publié: {formatDate(article.published_at)}
+                          </span>
                         )}
                       </div>
 
-                      {article.tags && Array.isArray(article.tags) && article.tags.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {article.tags.slice(0, 3).map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex rounded-md bg-blue-50 px-2 py-1 text-xs text-blue-700"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {article.tags.length > 3 && (
-                            <span className="inline-flex rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-500">
-                              +{article.tags.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      {article.tags &&
+                        Array.isArray(article.tags) &&
+                        article.tags.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {article.tags.slice(0, 3).map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex rounded-md bg-blue-50 px-2 py-1 text-xs text-blue-700"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {article.tags.length > 3 && (
+                              <span className="inline-flex rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-500">
+                                +{article.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
                     </div>
 
                     <div className="ml-4 flex items-center space-x-2">
                       {/* Actions rapides */}
-                      {article.status === 'draft' && (
+                      {article.status === "draft" && (
                         <button
-                          onClick={() => updateArticleStatus(article.id, 'published')}
+                          onClick={() =>
+                            updateArticleStatus(article.id, "published")
+                          }
                           className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
                         >
                           Publier
                         </button>
                       )}
-                      
-                      {article.status === 'published' && (
+
+                      {article.status === "published" && (
                         <button
-                          onClick={() => updateArticleStatus(article.id, 'draft')}
+                          onClick={() =>
+                            updateArticleStatus(article.id, "draft")
+                          }
                           className="rounded-md bg-yellow-600 px-3 py-1 text-xs font-medium text-white hover:bg-yellow-700"
                         >
                           Dépublier
@@ -323,9 +353,24 @@ const ArticlesManagement=()=> {
                         className="text-blue-600 hover:text-blue-800"
                         title="Voir l'article"
                       >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                       </Link>
 
@@ -334,8 +379,18 @@ const ArticlesManagement=()=> {
                         className="text-red-400 hover:text-red-600"
                         title="Supprimer"
                       >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -345,15 +400,26 @@ const ArticlesManagement=()=> {
             </div>
           ) : (
             <div className="px-6 py-12 text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun article trouvé</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                Aucun article trouvé
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm || filter !== "all" 
+                {searchTerm || filter !== "all"
                   ? "Modifiez vos filtres pour voir plus d'articles."
-                  : "Créez votre premier sujet pour générer des articles."
-                }
+                  : "Créez votre premier sujet pour générer des articles."}
               </p>
               {!searchTerm && filter === "all" && (
                 <div className="mt-6">
@@ -371,5 +437,5 @@ const ArticlesManagement=()=> {
       </div>
     </main>
   );
-}
-export default  ArticlesManagement
+};
+export default ArticlesManagement;

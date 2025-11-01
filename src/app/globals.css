@@ -1,5 +1,6 @@
-.test { background: red !important; }
-
+.test {
+  background: red !important;
+}
 
 @tailwind base;
 @tailwind components;

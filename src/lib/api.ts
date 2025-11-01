@@ -1,206 +1,165 @@
-// lib/api.ts - Service API pour votre backend NestJS
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000/api';
+import { ActiveJob, Article, BatchArticlesRequest, BatchArticlesResponse, CreateArticleData, DashboardArticleRequest, DashboardGenerationStats, DashboardMetrics, DashboardResponse, GenerationJobResponse, ImagePrompt, JobStatusResponse, PaginatedArticlesResponse, UpdateArticleData } from "@/types/ApiTypes";
 
-export interface DashboardArticleRequest {
-    title: string;
-    topic: string;
-    original_topic: string;
-    description: string;
-    category: string;
-    domain: string;
-    tags: string[];
-    author: string;
+// ===== DASHBOARD API =====
+
+export async function generateArticleFromDashboard(
+  data: DashboardArticleRequest
+): Promise<GenerationJobResponse> {
+  return request<GenerationJobResponse>("/dashboard/generate-article", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export interface GenerationJobResponse {
-    success: boolean;
-    jobId?: string;
-    articleId: string; 
-    message?: string;
-    error?: string;
+export async function processArticleFromDashboard(
+  articleId: string
+): Promise<GenerationJobResponse> {
+  return request<GenerationJobResponse>(
+    `/dashboard/process-article/${articleId}`,
+    {
+      method: "POST",
+    }
+  );
 }
 
-export interface JobStatusResponse {
-    status: 'pending' | 'generating' | 'completed' | 'error';
-    progress: number;
-    startTime: string;
-    endTime?: string;
-    error?: string;
-    articleId?: string;
-    type: 'article' | 'video' | 'audio';
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  return request<JobStatusResponse>(`/dashboard/jobs/${jobId}`);
 }
 
-export interface DashboardGenerationStats {
-    inProgress: number;
-    completed: number;
-    failed: number;
-    averageGenerationTime: number;
-    totalJobsToday: number;
+export async function getActiveJobs(): Promise<ActiveJob[]> {
+  return request<ActiveJob[]>("/dashboard/active-jobs");
 }
 
-class ApiService {
-
-    constructor() {
-        console.log('API_BASE_URL:', API_BASE_URL); // Doit afficher http://localhost:4000
-    }
-    private async request<T>(
-        endpoint: string,
-        options: RequestInit = {}
-    ): Promise<T> {
-        const url = `${API_BASE_URL}${endpoint}`;
-
-
-        const config: RequestInit = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
-            ...options,
-        };
-
-        try {
-            const response = await fetch(url, config);
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error(`API request failed: ${endpoint}`, error);
-            throw error;
-        }
-    }
-
-    // === ROUTES DASHBOARD ===
-
-    async generateArticleFromDashboard(data: DashboardArticleRequest): Promise<GenerationJobResponse> {
-        return this.request<GenerationJobResponse>('/dashboard/generate-article', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    }
-
-    async processArticleFromDashboard(articleId: string): Promise<GenerationJobResponse> {
-        return this.request<GenerationJobResponse>(`/dashboard/process-article/${articleId}`, {
-            method: 'POST',
-        });
-    }
-
-    async getJobStatus(jobId: string): Promise<JobStatusResponse> {
-        return this.request(`/dashboard/jobs/${jobId}`);
-    }
-
-    async getActiveJobs(): Promise<any[]> {
-        return this.request('/dashboard/active-jobs');
-    }
-
-    async getExtendedDashboard(): Promise<any> {
-        return this.request('/dashboard/extended');
-    }
-
-    async getDashboardGenerationStats(): Promise<DashboardGenerationStats> {
-        return this.request('/dashboard/generation-stats');
-    }
-
-    async getDashboard(): Promise<any> {
-        return this.request('/dashboard');
-    }
-
-    async getDashboardMetrics(): Promise<any> {
-        return this.request('/dashboard/metrics');
-    }
-
-    // === ROUTES ARTICLES ===
-
-    async getArticles(params: {
-        page?: number;
-        limit?: number;
-        domain?: string;
-        category?: string;
-        search?: string;
-    } = {}): Promise<any> {
-        const queryParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined) {
-                queryParams.append(key, value.toString());
-            }
-        });
-
-        return this.request(`/articles?${queryParams.toString()}`);
-    }
-
-    async generateArticleStandard(data: {
-        topic: string;
-        category: string;
-        domain: string;
-        imagePrompt: any;
-    }): Promise<any> {
-        return this.request('/articles/generate', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    }
-
-    async enrichArticle(articleId: string): Promise<any> {
-        return this.request(`/articles/${articleId}/enrich`, {
-            method: 'POST',
-        });
-    }
-
-    async createEnrichedArticle(data: {
-        topic: string;
-        category: string;
-        domain: string;
-        imagePrompt?: any;
-        image?: string;
-        imageUrl?: string;
-    }): Promise<any> {
-        return this.request('/articles/create-enriched', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    }
-
-    async checkArticleExists(topic: string, domain: string): Promise<{ exists: boolean }> {
-        const queryParams = new URLSearchParams({ topic, domain });
-        return this.request(`/articles/exists?${queryParams.toString()}`);
-    }
-
-    async updateArticle(articleId: string, data: any): Promise<any> {
-        return this.request(`/articles/${articleId}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        });
-    }
-
-    async deleteArticle(articleId: string): Promise<void> {
-        return this.request(`/articles/${articleId}`, {
-            method: 'DELETE',
-        });
-    }
-
-    async getArticleById(articleId: string): Promise<any> {
-        return this.request(`/articles/${articleId}`);
-    }
-
-    async fixInternalLinksLanguage(articleId: string): Promise<any> {
-        return this.request(`/articles/${articleId}/fix-links-language`, {
-            method: 'POST',
-        });
-    }
-
-    async createBatchArticles(data: {
-        topics: string[];
-        category: string;
-        domain: string;
-    }): Promise<any> {
-        return this.request('/articles/batch', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    }
+export async function getExtendedDashboard(): Promise<DashboardResponse> {
+  return request<DashboardResponse>("/dashboard/extended");
 }
 
-export const apiService = new ApiService();
+export async function getDashboardGenerationStats(): Promise<DashboardGenerationStats> {
+  return request<DashboardGenerationStats>("/dashboard/generation-stats");
+}
+
+export async function getDashboard(): Promise<DashboardResponse> {
+  return request<DashboardResponse>("/dashboard");
+}
+
+export async function getDashboardMetrics(): Promise<DashboardMetrics> {
+  return request<DashboardMetrics>("/dashboard/metrics");
+}
+
+// ===== ARTICLES API =====
+
+export async function getArticles(
+  params: {
+    page?: number;
+    limit?: number;
+    domain?: string;
+    category?: string;
+    search?: string;
+  } = {}
+): Promise<PaginatedArticlesResponse> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      queryParams.append(key, value.toString());
+    }
+  });
+
+  return request<PaginatedArticlesResponse>(
+    `/articles?${queryParams.toString()}`
+  );
+}
+
+export async function generateArticleStandard(data: {
+  topic: string;
+  category: string;
+  domain: string;
+  imagePrompt?: ImagePrompt;
+}): Promise<Article> {
+  return request<Article>("/articles/generate", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function enrichArticle(articleId: string): Promise<Article> {
+  return request<Article>(`/articles/${articleId}/enrich`, {
+    method: "POST",
+  });
+}
+
+export async function createEnrichedArticle(
+  data: CreateArticleData
+): Promise<Article> {
+  return request<Article>("/articles/create-enriched", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function checkArticleExists(
+  topic: string,
+  domain: string
+): Promise<{ exists: boolean }> {
+  const queryParams = new URLSearchParams({ topic, domain });
+  return request<{ exists: boolean }>(
+    `/articles/exists?${queryParams.toString()}`
+  );
+}
+
+export async function updateArticle(
+  articleId: string,
+  data: UpdateArticleData
+): Promise<Article> {
+  return request<Article>(`/articles/${articleId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteArticle(articleId: string): Promise<void> {
+  return request<void>(`/articles/${articleId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getArticleById(articleId: string): Promise<Article> {
+  return request<Article>(`/articles/${articleId}`);
+}
+
+export async function fixInternalLinksLanguage(
+  articleId: string
+): Promise<Article> {
+  return request<Article>(`/articles/${articleId}/fix-links-language`, {
+    method: "POST",
+  });
+}
+
+export async function createBatchArticles(
+  data: BatchArticlesRequest
+): Promise<BatchArticlesResponse> {
+  return request<BatchArticlesResponse>("/articles/batch", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export const apiService = {
+  generateArticleFromDashboard,
+  processArticleFromDashboard,
+  getJobStatus,
+  getActiveJobs,
+  getExtendedDashboard,
+  getDashboardGenerationStats,
+  getDashboard,
+  getDashboardMetrics,
+  getArticles,
+  generateArticleStandard,
+  enrichArticle,
+  createEnrichedArticle,
+  checkArticleExists,
+  updateArticle,
+  deleteArticle,
+  getArticleById,
+  fixInternalLinksLanguage,
+  createBatchArticles,
+};

@@ -55,7 +55,7 @@ export default async function ArticlePage({
             Tags : {tags.map((t) => `#${t}`).join(" · ")}
           </p>
           <p className="mt-8 text-sm text-gray-600">
-            'mes tags l splus beau '
+            mes tags les plus beau
           </p>
         </>
       )}

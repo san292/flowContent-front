@@ -52,19 +52,22 @@ export default function AnalyticsPage() {
       const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
       const publishedThisWeek = articles.filter(
-        a => a.status === 'published' && new Date(a.created_at) >= oneWeekAgo
+        (a) => a.status === "published" && new Date(a.created_at) >= oneWeekAgo
       ).length;
 
       const publishedThisMonth = articles.filter(
-        a => a.status === 'published' && new Date(a.created_at) >= oneMonthAgo
+        (a) => a.status === "published" && new Date(a.created_at) >= oneMonthAgo
       ).length;
 
       // Top catégories
-      const categoryCount: Record<string, number> = articles.reduce((acc, article) => {
-        const cat = article.category || 'Non catégorisé';
-        acc[cat] = (acc[cat] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const categoryCount: Record<string, number> = articles.reduce(
+        (acc, article) => {
+          const cat = article.category || "Non catégorisé";
+          acc[cat] = (acc[cat] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       const topCategories = Object.entries(categoryCount)
         .map(([category, count]) => ({ category, count: count as number }))
@@ -72,11 +75,14 @@ export default function AnalyticsPage() {
         .slice(0, 5);
 
       // Top sujets
-      const topicCount: Record<string, number> = articles.reduce((acc, article) => {
-        const topic = article.original_topic || 'Sans sujet';
-        acc[topic] = (acc[topic] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const topicCount: Record<string, number> = articles.reduce(
+        (acc, article) => {
+          const topic = article.original_topic || "Sans sujet";
+          acc[topic] = (acc[topic] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       const topTopics = Object.entries(topicCount)
         .map(([topic, count]) => ({ topic, count: count as number }))
@@ -84,10 +90,13 @@ export default function AnalyticsPage() {
         .slice(0, 5);
 
       // Distribution des statuts
-      const statusCount: Record<string, number> = articles.reduce((acc, article) => {
-        acc[article.status] = (acc[article.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const statusCount: Record<string, number> = articles.reduce(
+        (acc, article) => {
+          acc[article.status] = (acc[article.status] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       const statusDistribution = Object.keys(statusCount).map((status) => {
         const count = statusCount[status];
@@ -102,10 +111,10 @@ export default function AnalyticsPage() {
       const recentActivity = [];
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = date.toISOString().split("T")[0];
         const published = articles.filter(
-          a => a.status === 'published' && 
-               a.created_at.split('T')[0] === dateStr
+          (a) =>
+            a.status === "published" && a.created_at.split("T")[0] === dateStr
         ).length;
         recentActivity.push({
           date: dateStr,
@@ -150,7 +159,7 @@ export default function AnalyticsPage() {
 
   const getMaxActivity = () => {
     if (!analytics?.recentActivity.length) return 1;
-    return Math.max(...analytics.recentActivity.map(a => a.published)) || 1;
+    return Math.max(...analytics.recentActivity.map((a) => a.published)) || 1;
   };
 
   if (loading) {
@@ -180,8 +189,18 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link href="/admin" className="text-gray-400 hover:text-gray-600">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </Link>
               <div>
@@ -195,7 +214,9 @@ export default function AnalyticsPage() {
             <div className="flex items-center space-x-3">
               <select
                 value={dateRange}
-                onChange={(e) => setDateRange(e.target.value as typeof dateRange)}
+                onChange={(e) =>
+                  setDateRange(e.target.value as typeof dateRange)
+                }
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="week">7 derniers jours</option>
@@ -221,14 +242,22 @@ export default function AnalyticsPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500">
-                    <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <svg
+                      className="h-5 w-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total articles</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.totalArticles}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total articles
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {analytics.totalArticles}
+                  </p>
                 </div>
               </div>
             </div>
@@ -239,14 +268,26 @@ export default function AnalyticsPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="flex h-8 w-8 items-center justify-center rounded-md bg-green-500">
-                    <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <svg
+                      className="h-5 w-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Cette semaine</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.publishedThisWeek}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Cette semaine
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {analytics.publishedThisWeek}
+                  </p>
                 </div>
               </div>
             </div>
@@ -257,14 +298,24 @@ export default function AnalyticsPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="flex h-8 w-8 items-center justify-center rounded-md bg-purple-500">
-                    <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    <svg
+                      className="h-5 w-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Ce mois</p>
-                  <p className="text-2xl font-semibold text-gray-900">{analytics.publishedThisMonth}</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {analytics.publishedThisMonth}
+                  </p>
                 </div>
               </div>
             </div>
@@ -275,15 +326,28 @@ export default function AnalyticsPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="flex h-8 w-8 items-center justify-center rounded-md bg-orange-500">
-                    <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    <svg
+                      className="h-5 w-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Taux publication</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Taux publication
+                  </p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {analytics.statusDistribution.find(s => s.status === 'published')?.percentage || 0}%
+                    {analytics.statusDistribution.find(
+                      (s) => s.status === "published"
+                    )?.percentage || 0}
+                    %
                   </p>
                 </div>
               </div>
@@ -308,7 +372,7 @@ export default function AnalyticsPage() {
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all duration-300"
                         style={{
-                          width: `${(day.published / getMaxActivity()) * 100}%`
+                          width: `${(day.published / getMaxActivity()) * 100}%`,
                         }}
                       />
                     </div>
@@ -331,7 +395,9 @@ export default function AnalyticsPage() {
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div
-                      className={`w-3 h-3 rounded-full ${getStatusColor(item.status)} mr-3`}
+                      className={`w-3 h-3 rounded-full ${getStatusColor(
+                        item.status
+                      )} mr-3`}
                     />
                     <span className="text-sm font-medium text-gray-700 capitalize">
                       {item.status}
@@ -359,11 +425,15 @@ export default function AnalyticsPage() {
               {analytics.topCategories.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">{item.category}</span>
-                  <span className="text-sm font-medium text-gray-900">{item.count}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {item.count}
+                  </span>
                 </div>
               ))}
               {analytics.topCategories.length === 0 && (
-                <p className="text-sm text-gray-500">Aucune catégorie trouvée</p>
+                <p className="text-sm text-gray-500">
+                  Aucune catégorie trouvée
+                </p>
               )}
             </div>
           </div>
@@ -377,7 +447,9 @@ export default function AnalyticsPage() {
               {analytics.topTopics.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">{item.topic}</span>
-                  <span className="text-sm font-medium text-gray-900">{item.count}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {item.count}
+                  </span>
                 </div>
               ))}
               {analytics.topTopics.length === 0 && (
@@ -393,9 +465,10 @@ export default function AnalyticsPage() {
             Métriques avancées à venir
           </h3>
           <p className="text-sm text-blue-700">
-            Une fois votre blog connecté aux réseaux sociaux et aux outils d'analytics, 
-            vous pourrez voir ici des métriques comme les vues, partages, engagement, 
-            trafic généré, et ROI de vos publications automatiques.
+            Une fois votre blog connecté aux réseaux sociaux et aux outils
+            d`&apos;`analytics, vous pourrez voir ici des métriques comme les vues,
+            partages, engagement, trafic généré, et ROI de vos publications
+            automatiques.
           </p>
         </div>
       </div>

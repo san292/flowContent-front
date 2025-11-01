@@ -79,7 +79,9 @@ export default async function HomePage() {
   // Récupère les 6 derniers articles publiés pour la homepage
   const { data: articles, error } = await supabase
     .from("articles")
-    .select("id, title, description, slug, created_at, image,image_url, category")
+    .select(
+      "id, title, description, slug, created_at, image,image_url, category"
+    )
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(6);
@@ -110,8 +112,9 @@ export default async function HomePage() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-10 text-white-6 600 ">
-            Découvrez des articles générés intelligemment, couvrant les sujets les plus passionnants 
-            du moment. Du contenu frais et résumé, publié automatiquement pour vous tenir informé.
+            Découvrez des articles générés intelligemment, couvrant les sujets
+            les plus passionnants du moment. Du contenu frais et résumé, publié
+            automatiquement pour vous tenir informé.
           </p>
           <div className="mt-8 flex items-center justify-center gap-2">
             <Link
@@ -184,18 +187,12 @@ export default async function HomePage() {
                   </Link>
                 </h3>
 
-                {/* {featuredArticle.description && (
-                  <p className="mt-4 text-neutral-600 lg:text-lg">
-                    {featuredArticle.description}
-                  </p>
-                )} */}
-
                 <div className="mt-6">
                   <Link
                     href={`/articles/${featuredArticle.slug}`}
                     className="inline-flex items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-700"
                   >
-                    Lire l'article
+                    Lire l&&rsquo;article
                     <svg
                       className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                       viewBox="0 0 20 20"
@@ -225,7 +222,7 @@ export default async function HomePage() {
                 Articles récents
               </h2>
               <p className="mt-2 text-neutral-600">
-                Les dernières publications générées par l'IA
+                Les dernières publications générées par L&rsquo;IA
               </p>
             </div>
             <Link
@@ -256,7 +253,7 @@ export default async function HomePage() {
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-neutral-100 to-neutral-200" />
                   )}
-                  
+
                   {/* Category badge */}
                   {article.category && (
                     <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-neutral-700 shadow">
@@ -287,7 +284,7 @@ export default async function HomePage() {
                       href={`/articles/${article.slug}`}
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-900 transition-colors hover:text-neutral-600"
                     >
-                      Lire l'article
+                      Lire l&&rsquo;article
                       <svg
                         className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                         viewBox="0 0 20 20"
@@ -361,7 +358,8 @@ export default async function HomePage() {
               Aucun article publié
             </h3>
             <p className="mt-2 text-neutral-600">
-              Votre système de génération d'articles par IA n'a pas encore produit de contenu.
+              Votre système de génération d&rsquo;articles par IA n&rsquo;a pas encore
+              produit de contenu.
             </p>
           </div>
         </section>

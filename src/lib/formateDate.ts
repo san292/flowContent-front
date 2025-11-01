@@ -1,5 +1,8 @@
 // src/lib/formatDate.ts
-export function formatDateUTC(input?: string | number | Date, locale = "fr-FR") {
+export function formatDateUTC(
+  input?: string | number | Date,
+  locale = "fr-FR"
+) {
   if (!input) return "";
   const d = new Date(input);
 

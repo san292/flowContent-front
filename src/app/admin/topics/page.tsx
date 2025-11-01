@@ -25,9 +25,11 @@ type NewTopic = {
   author: string;
 };
 
+type JobStatus= "pending" | "generating" | "completed" | "error";
+
 type GenerationJob = {
   articleId: string;
-  status: "pending" | "generating" | "completed" | "error";
+  status: JobStatus
   progress?: number;
 };
 
@@ -71,7 +73,7 @@ export default function TopicsManagement() {
             ...prev,
             [jobId]: {
               ...prev[jobId],
-              status: status.status as any,
+              status: status.status as JobStatus,
               progress: status.progress,
             },
           }));
@@ -93,6 +95,7 @@ export default function TopicsManagement() {
     }, 3000); // Check toutes les 3 secondes
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generationJobs]);
 
   const fetchTopicsSummary = async () => {
@@ -275,7 +278,7 @@ export default function TopicsManagement() {
     }).format(new Date(dateStr));
   };
 
-  const getGenerationStatus = (topic: string) => {
+  const getGenerationStatus = () => {
     // Trouver un job de génération en cours pour ce sujet
     const job = Object.values(generationJobs).find((job) => {
       // Ici vous devriez avoir une logique pour lier les jobs aux sujets
@@ -325,7 +328,7 @@ export default function TopicsManagement() {
                   Gestion des sujets
                 </h1>
                 <p className="mt-1 text-sm text-gray-500">
-                  Créez de nouveaux sujets pour la génération d'articles IA
+                  Créez de nouveaux sujets pour la génération d&lsquo;articles IA
                 </p>
               </div>
             </div>
@@ -379,13 +382,13 @@ export default function TopicsManagement() {
         {showNewForm && (
           <div className="mb-8 rounded-lg bg-white p-6 shadow">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Nouveau sujet pour l'IA
+              Nouveau sujet pour l&lsquo;IA
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Titre de l'article
+                    Titre de l&lsquo;article
                   </label>
                   <input
                     type="text"
@@ -422,7 +425,7 @@ export default function TopicsManagement() {
                     <option value="Science">Science</option>
                     <option value="Voyage">Voyage</option>
                     <option value="Musique">Musique</option>
-                      <option value="Divertissement">Divertissement</option>
+                    <option value="Divertissement">Divertissement</option>
                   </select>
                 </div>
               </div>
@@ -465,7 +468,7 @@ export default function TopicsManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Description pour l'IA
+                  Description pour l&lsquo;IA
                 </label>
                 <textarea
                   required
@@ -521,7 +524,7 @@ export default function TopicsManagement() {
                   type="submit"
                   className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
                 >
-                  Créer et générer l'article
+                  Créer et générer l&lsquo;article
                 </button>
               </div>
             </form>
@@ -605,11 +608,11 @@ export default function TopicsManagement() {
                         onClick={() => handleProcessTopic(topic.original_topic)}
                         className="rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
                         disabled={
-                          getGenerationStatus(topic.original_topic)?.status ===
+                          getGenerationStatus()?.status ===
                           "generating"
                         }
                       >
-                        {getGenerationStatus(topic.original_topic)?.status ===
+                        {getGenerationStatus()?.status ===
                         "generating"
                           ? "En cours..."
                           : "Générer article"}
