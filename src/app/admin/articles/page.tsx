@@ -33,21 +33,38 @@ const ArticlesManagement = () => {
     fetchArticles();
   }, []);
 
-  const fetchArticles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("*")
-        .order("created_at", { ascending: false });
+  // const fetchArticles = async () => {
+  //   try {
+  //     const { data, error } = await supabase
+  //       .from("articles")
+  //       .select("*")
+  //       .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setArticles(data || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des articles:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (error) throw error;
+  //     setArticles(data || []);
+  //   } catch (error) {
+  //     console.error("Erreur lors du chargement des articles:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchArticles = async () => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/articles`
+    );
+    
+    if (!response.ok) throw new Error('Erreur API');
+    
+    const data = await response.json();
+    setArticles(data.articles || []);
+  } catch (error) {
+    console.error("Erreur lors du chargement des articles:", error);
+  } finally {
+    setLoading(false);
+  }
+}
 
   const filterArticles = useCallback(() => {
   let filtered = articles;
