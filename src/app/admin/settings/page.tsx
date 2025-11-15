@@ -296,6 +296,7 @@ const SettingsPage = () => {
                           <option value="Lifestyle">Lifestyle</option>
                           <option value="Éducation">Éducation</option>
                           <option value="Finance">Finance</option>
+                           <option value="Politique">Politique</option>
                           <option value="Science">Science</option>
                           <option value="Voyage">Voyage</option>
                           <option value="Sport">Sport</option>

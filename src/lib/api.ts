@@ -1,4 +1,21 @@
-import { ActiveJob, Article, BatchArticlesRequest, BatchArticlesResponse, CreateArticleData, DashboardArticleRequest, DashboardGenerationStats, DashboardMetrics, DashboardResponse, GenerationJobResponse, ImagePrompt, JobStatusResponse, PaginatedArticlesResponse, UpdateArticleData } from "@/types/ApiTypes";
+import {
+  ActiveJob,
+  Article,
+  BatchArticlesRequest,
+  BatchArticlesResponse,
+  CreateArticleData,
+  DashboardArticleRequest,
+  DashboardGenerationStats,
+  DashboardMetrics,
+  DashboardResponse,
+  DeleteArticleResponse,
+  GenerationJobResponse,
+  ImagePrompt,
+  JobStatusResponse,
+  PaginatedArticlesResponse,
+  UpdateArticleData,
+} from "@/types/ApiTypes";
+import { request } from "./apiHelpers";
 
 // ===== DASHBOARD API =====
 
@@ -20,6 +37,15 @@ export async function processArticleFromDashboard(
       method: "POST",
     }
   );
+}
+
+export async function processArticleByTopic(
+  originalTopic: string
+): Promise<GenerationJobResponse> {
+  return request<GenerationJobResponse>(`/dashboard/process-article-by-topic`, {
+    method: "POST",
+    body: JSON.stringify({ originalTopic }),
+  });
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
@@ -48,6 +74,27 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
 // ===== ARTICLES API =====
 
+export async function getPublicArticles(
+  params: {
+    page?: number;
+    limit?: number;
+    domain?: string;
+    category?: string;
+    search?: string;
+  } = {}
+): Promise<PaginatedArticlesResponse> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== "")
+      queryParams.append(key, String(value));
+  });
+
+  return request<PaginatedArticlesResponse>(
+    `/articles/public?${queryParams.toString()}`,
+
+  );
+}
+
 export async function getArticles(
   params: {
     page?: number;
@@ -65,7 +112,7 @@ export async function getArticles(
   });
 
   return request<PaginatedArticlesResponse>(
-    `/articles?${queryParams.toString()}`
+    `/articles?${queryParams.toString()}`,
   );
 }
 
@@ -116,8 +163,8 @@ export async function updateArticle(
   });
 }
 
-export async function deleteArticle(articleId: string): Promise<void> {
-  return request<void>(`/articles/${articleId}`, {
+export async function deleteArticle(articleId: string): Promise<DeleteArticleResponse> {
+  return request<DeleteArticleResponse>(`/articles/${articleId}`, {
     method: "DELETE",
   });
 }
@@ -143,9 +190,14 @@ export async function createBatchArticles(
   });
 }
 
+export async function getArticleBySlug(slug: string): Promise<Article> {
+  return request<Article>(`/articles/public/${slug}`);
+}
+
 export const apiService = {
   generateArticleFromDashboard,
   processArticleFromDashboard,
+  processArticleByTopic,
   getJobStatus,
   getActiveJobs,
   getExtendedDashboard,
@@ -153,6 +205,7 @@ export const apiService = {
   getDashboard,
   getDashboardMetrics,
   getArticles,
+  getPublicArticles,
   generateArticleStandard,
   enrichArticle,
   createEnrichedArticle,
@@ -162,4 +215,5 @@ export const apiService = {
   getArticleById,
   fixInternalLinksLanguage,
   createBatchArticles,
+  getArticleBySlug,
 };

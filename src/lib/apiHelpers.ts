@@ -1,7 +1,7 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000/api";
+import { API_BASE_URL } from "./config";
 
-async function request<T>(
+
+export async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -12,6 +12,7 @@ async function request<T>(
       "Content-Type": "application/json",
       ...options.headers,
     },
+        cache: "no-store", //desactiver le cache
     ...options,
   };
 
@@ -23,6 +24,9 @@ async function request<T>(
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
+    }
+     if (response.status === 304) {
+      return {} as T; // Retourner un objet vide pour le 304
     }
 
     return await response.json();

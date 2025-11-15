@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useToast } from "@/hooks/useToast";
+import { apiService } from "@/lib/api";
+import { UpdateArticleData } from "@/types/ApiTypes";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Article = {
   id: string;
@@ -24,12 +26,25 @@ type FilterType = "all" | "published" | "draft" | "pending";
 
 const ArticlesManagement = () => {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
+   const { showToast, ToastBanner } = useToast();
+
+useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/articles`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Erreur API");
+        const json = await res.json();
+        setArticles(json.articles || []);
+      } catch (e) {
+        console.error("Erreur lors du chargement des articles:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchArticles();
   }, []);
 
@@ -49,92 +64,66 @@ const ArticlesManagement = () => {
   //   }
   // };
 
-  const fetchArticles = async () => {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/articles`
-    );
-    
-    if (!response.ok) throw new Error('Erreur API');
-    
-    const data = await response.json();
-    setArticles(data.articles || []);
-  } catch (error) {
-    console.error("Erreur lors du chargement des articles:", error);
-  } finally {
-    setLoading(false);
-  }
-}
 
-  const filterArticles = useCallback(() => {
-  let filtered = articles;
+   const filteredArticles = useMemo(() => {
+    let out = articles;
 
-  // Filtrer par statut
-  if (filter !== "all") {
-    filtered = filtered.filter((article) => article.status === filter);
-  }
-
-  // Filtrer par recherche
-  if (searchTerm) {
-    filtered = filtered.filter(
-      (article) =>
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.description
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        article.topic?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.original_topic
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    );
-  }
-
-  setFilteredArticles(filtered);
-}, [articles, filter, searchTerm]);
-
-  const updateArticleStatus = async (id: string, newStatus: string) => {
-    try {
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      const updates: any = { status: newStatus };
-
-      if (newStatus === "published") {
-        updates.published_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from("articles")
-        .update(updates)
-        .eq("id", id);
-
-      if (error) throw error;
-
-      // Mettre à jour localement
-      setArticles((prev) =>
-        prev.map((article) =>
-          article.id === id
-            ? {
-                ...article,
-                status: newStatus,
-                published_at: updates.published_at || article.published_at,
-              }
-            : article
-        )
-      );
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour:", error);
+    if (filter !== "all") {
+      out = out.filter(a => a.status === filter);
     }
-  };
+
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      out = out.filter(a =>
+        a.title.toLowerCase().includes(q) ||
+        a.description?.toLowerCase().includes(q) ||
+        a.topic?.toLowerCase().includes(q) ||
+        a.original_topic?.toLowerCase().includes(q)
+      );
+    }
+
+    return out;
+  }, [articles, filter, searchTerm]);
+
+ const updateArticleStatus = async (id: string, newStatus: string) => {
+  try {
+    const updates: UpdateArticleData = {
+      status: newStatus as "published" | "draft" | "archived",
+    };
+
+    if (newStatus === "published") {
+      updates.published_at = new Date().toISOString();
+    }
+
+    await apiService.updateArticle(id, updates);
+
+    // Mettre à jour localement
+    setArticles((prev) =>
+      prev.map((article) =>
+        article.id === id
+          ? {
+              ...article,
+              status: newStatus,
+              published_at: updates.published_at || article.published_at,
+            }
+          : article
+      )
+    );
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour:", error);
+  }
+};
 
   const deleteArticle = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) return;
 
     try {
-      const { error } = await supabase.from("articles").delete().eq("id", id);
-
-      if (error) throw error;
-
+      const res= await apiService.deleteArticle(id);
+        showToast("success", res.message);
       setArticles((prev) => prev.filter((article) => article.id !== id));
     } catch (error) {
+        const message= error instanceof Error ? error.message : String(error);
+       showToast("error", message || "Erreur lors de la suppression");
       console.error("Erreur lors de la suppression:", error);
     }
   };
@@ -179,8 +168,11 @@ const ArticlesManagement = () => {
     );
   }
 
+
   return (
     <main className="min-h-screen bg-gray-50">
+   <ToastBanner />;
+
       {/* Header */}
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-6 py-6">
@@ -365,6 +357,26 @@ const ArticlesManagement = () => {
 
                       {/* Liens d'action */}
                       <Link
+                        href={`/admin/articles/${article.id}/edit`}
+                        className="text-gray-600 hover:text-gray-800"
+                        title="Éditer"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </Link>
+
+                      <Link
                         href={`/articles/${article.slug}`}
                         target="_blank"
                         className="text-blue-600 hover:text-blue-800"
@@ -391,6 +403,7 @@ const ArticlesManagement = () => {
                         </svg>
                       </Link>
 
+                      {/* Bouton supprimer */}
                       <button
                         onClick={() => deleteArticle(article.id)}
                         className="text-red-400 hover:text-red-600"
