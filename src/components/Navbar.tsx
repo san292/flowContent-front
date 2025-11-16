@@ -1,12 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Vérifie si l'utilisateur est connecté
+  useEffect(() => {
+    const checkAuth = () => {
+      const authCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('admin-auth='));
+      setIsLoggedIn(authCookie?.split('=')[1] === 'true');
+    };
+
+    checkAuth();
+    // Réévalue à chaque changement de route
+    window.addEventListener('focus', checkAuth);
+    return () => window.removeEventListener('focus', checkAuth);
+  }, [pathname]);
+
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    document.cookie = 'admin-auth=; path=/; max-age=0';
+    setIsLoggedIn(false);
+    router.push('/');
+  };
 
   const navigation = [
     { name: "Accueil", href: "/" },
@@ -43,7 +67,7 @@ export default function Navbar() {
                 </svg>
               </div>
               <span className="text-xl font-bold text-neutral-900">
-                MARK Blog
+                Next Blog
               </span>
             </Link>
           </div>
@@ -66,6 +90,23 @@ export default function Navbar() {
                 {item.name}
               </Link>
             ))}
+
+            {/* Bouton connexion/déconnexion */}
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                Déconnexion
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                Connexion
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -131,6 +172,27 @@ export default function Navbar() {
                 {item.name}
               </Link>
             ))}
+
+            {/* Bouton connexion/déconnexion mobile */}
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left block rounded-lg px-4 py-3 text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                Déconnexion
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block rounded-lg px-4 py-3 text-base font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+              >
+                Connexion
+              </Link>
+            )}
           </div>
         </div>
       )}

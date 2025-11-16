@@ -49,8 +49,51 @@ export default function TopicsManagement() {
     author: "IA Assistant",
   });
   const [tagsInput, setTagsInput] = useState("");
+  const [isCreating, setIsCreating] = useState(false); // État de création
+
+  // Cache pour éviter les vérifications multiples
+  const [existenceCache, setExistenceCache] = useState<
+    Record<string, boolean>
+  >({});
 
   const { showToast, ToastBanner } = useToast();
+
+  // Fonction pour vérifier si un article existe déjà (avec cache)
+  const checkIfArticleExists = async (
+    topic: string,
+    domain: string
+  ): Promise<boolean> => {
+    const cacheKey = `${topic}:${domain}`;
+
+    // Vérifier le cache d'abord
+    if (existenceCache[cacheKey] !== undefined) {
+      console.log(`📦 Cache hit pour ${cacheKey}:`, existenceCache[cacheKey]);
+      return existenceCache[cacheKey];
+    }
+
+    // Sinon, appeler l'API
+    try {
+      const result = await apiService.checkArticleExists(topic, domain);
+
+      // Mettre à jour le cache
+      setExistenceCache((prev) => ({
+        ...prev,
+        [cacheKey]: result.exists,
+      }));
+
+      console.log(`🔍 Vérification API pour ${cacheKey}:`, result.exists);
+      return result.exists;
+    } catch (error) {
+      console.error("Erreur lors de la vérification:", error);
+      return false; // En cas d'erreur, on autorise la création
+    }
+  };
+
+  // Invalider le cache après création/suppression d'articles
+  const invalidateCache = () => {
+    setExistenceCache({});
+    console.log("🗑️ Cache invalidé");
+  };
 
   useEffect(() => {
     fetchTopicsSummary();
@@ -101,7 +144,7 @@ export default function TopicsManagement() {
     try {
       // ✅ Remplacer Supabase par API backend
       const articlesResponse = await apiService.getArticles({
-        limit: 500,
+        limit: 1000,
       });
 
       const articles = articlesResponse.articles || [];
@@ -169,12 +212,29 @@ export default function TopicsManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsCreating(true); // ✅ Démarre le loading
 
     try {
       const tagsArray = tagsInput
         .split(",")
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
+
+      const domain = "dashboard"; // ou votre domaine
+
+      showToast("info", "Vérification de l'article...");
+
+      // ✅ Vérifier si l'article existe déjà
+      const exists = await checkIfArticleExists(newTopic.topic, domain);
+
+      if (exists) {
+        showToast("error", "⚠️ Un article avec ce sujet existe déjà !");
+        console.log("❌ Article déjà existant:", newTopic.topic);
+        setIsCreating(false); // ✅ Arrête le loading
+        return; // Arrêter la création
+      }
+
+      showToast("info", "Création du brouillon en cours...");
 
       // UNIQUEMENT appel API backend - plus de Supabase direct
       const result = await apiService.generateArticleFromDashboard({
@@ -183,7 +243,7 @@ export default function TopicsManagement() {
         original_topic: newTopic.original_topic,
         description: newTopic.description,
         category: newTopic.category,
-        domain: "dashboard", // ou votre domaine
+        domain: domain,
         tags: tagsArray,
         author: newTopic.author,
       });
@@ -193,7 +253,11 @@ export default function TopicsManagement() {
         // Article créé avec succès par le backend
         console.log("Article result.articleId créé:", result.articleId);
 
-        await apiService.processArticleFromDashboard(result.articleId);
+        // ✅ NE PAS lancer la génération automatiquement ici
+        // L'utilisateur devra cliquer sur "Générer article" pour lancer l'IA
+
+        // Invalider le cache car un nouvel article a été créé
+        invalidateCache();
 
         // Reset formulaire
         setNewTopic({
@@ -211,10 +275,14 @@ export default function TopicsManagement() {
         // Rafraîchir la liste
         fetchTopicsSummary();
       } else {
+        showToast("error", result.error || "Erreur lors de la création.");
         console.error("Erreur création:", result.error);
       }
     } catch (error) {
       console.error("Erreur lors de l'ajout du sujet:", error);
+      showToast("error", "Erreur lors de l'ajout du sujet.");
+    } finally {
+      setIsCreating(false); // ✅ Arrête le loading dans tous les cas
     }
   };
 
@@ -224,14 +292,39 @@ export default function TopicsManagement() {
 
     // ✅ Remplacer Supabase par API backend
     const articlesResponse = await apiService.getArticles({
-      limit: 500,
+      limit: 1000,
     });
 
+    // Trouver les articles de ce topic
+    const topicArticles = articlesResponse.articles.filter(
+      (article) => article.original_topic === originalTopic
+    );
+
+    // Vérifier s'il y a déjà un article publié
+    const publishedArticle = topicArticles.find(
+      (article) => (article as any).status === "published"
+    );
+
+    if (publishedArticle) {
+      showToast("error", "⚠️ Un article publié existe déjà pour ce sujet !");
+      console.log("❌ Article déjà publié:", publishedArticle.id);
+      return;
+    }
+
+    // Vérifier s'il y a un article en cours de génération
+    const generatingArticle = topicArticles.find(
+      (article) => (article as any).status === "generating"
+    );
+
+    if (generatingArticle) {
+      showToast("error", "⏳ Un article est déjà en cours de génération !");
+      console.log("⏳ Article en génération:", generatingArticle.id);
+      return;
+    }
+
     // Filtrer pour trouver le draft de ce topic
-    const draftArticle = articlesResponse.articles.find(
-      (article) =>
-        article.original_topic === originalTopic &&
-        (article as any).status === "draft"
+    const draftArticle = topicArticles.find(
+      (article) => (article as any).status === "draft"
     );
 
     if (!draftArticle) {
@@ -312,10 +405,12 @@ export default function TopicsManagement() {
     );
   }
 
-  <ToastBanner />;
-
   return (
-    <main className="min-h-screen bg-gray-50">
+    <>
+      {/* ✅ ToastBanner doit être dans le JSX pour s'afficher */}
+      <ToastBanner />
+
+      <main className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-6 py-6">
@@ -430,6 +525,7 @@ export default function TopicsManagement() {
                     <option value="">Sélectionner une catégorie</option>
                     <option value="Sport">Sport</option>
                     <option value="Technologie">Technologie</option>
+                     <option value="Intelligence Artificielle">Intelligence Artificielle</option>
                     <option value="Business">Business</option>
                     <option value="Santé">Santé</option>
                     <option value="Environnement">Environnement</option>
@@ -537,9 +633,13 @@ export default function TopicsManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+                  disabled={isCreating}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center"
                 >
-                  Créer et générer l&lsquo;article
+                  {isCreating && (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  )}
+                  {isCreating ? "Création en cours..." : "Créer le brouillon"}
                 </button>
               </div>
             </form>
@@ -669,6 +769,7 @@ export default function TopicsManagement() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 // "use client";

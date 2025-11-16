@@ -52,7 +52,7 @@
 //   );
 // }
 // export default ArticlePage
-import { supabase } from "@/lib/supabase";
+import { getPublicArticles } from "@/lib/api";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -78,25 +78,22 @@ function formatDate(dateStr?: string | null) {
 }
 
 export default async function ArticlesIndex() {
-  const { data: articles, error } = await supabase
-    .from("articles")
-    .select("id, title, description, slug, created_at, image, image_url")
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
+  try {
+    // ✅ Utilise l'API backend au lieu de Supabase
+    const { articles } = await getPublicArticles({ limit: 1000 });
 
-  if (error) {
-    console.error("[Server] Erreur Supabase:", error.message);
-    return (
-      <main className="mx-auto max-w-6xl px-6 py-16">
-        <h1 className="text-4xl font-bold tracking-tight text-neutral-900">
-          Tous les articles
-        </h1>
-        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-          Une erreur est survenue lors du chargement des articles.
-        </p>
-      </main>
-    );
-  }
+    if (!articles || articles.length === 0) {
+      return (
+        <main className="mx-auto max-w-6xl px-6 py-16">
+          <h1 className="text-4xl font-bold tracking-tight text-neutral-900">
+            Tous les articles
+          </h1>
+          <p className="mt-4 text-neutral-500">
+            Aucun article publié pour le moment.
+          </p>
+        </main>
+      );
+    }
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-16">
@@ -192,4 +189,17 @@ export default async function ArticlesIndex() {
       )}
     </main>
   );
+  } catch (error) {
+    console.error("[Server] API error:", error);
+    return (
+      <main className="mx-auto max-w-6xl px-6 py-16">
+        <h1 className="text-4xl font-bold tracking-tight text-neutral-900">
+          Tous les articles
+        </h1>
+        <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          Une erreur est survenue lors du chargement des articles.
+        </p>
+      </main>
+    );
+  }
 }

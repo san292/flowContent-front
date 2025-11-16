@@ -1,13 +1,32 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Redirige automatiquement si déjà connecté
+  useEffect(() => {
+    const authCookie = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('admin-auth='));
+
+    if (authCookie?.split('=')[1] === 'true') {
+      router.push('/admin');
+    }
+  }, [router]);
+
+  // Affiche un message si redirigé depuis une page protégée
+  useEffect(() => {
+    if (searchParams.get('from')) {
+      setError('Vous devez vous connecter pour accéder à cette page');
+    }
+  }, [searchParams]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

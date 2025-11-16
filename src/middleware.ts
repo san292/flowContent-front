@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const  middleware=(request: NextRequest)=> {
+const middleware = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   // Protège /admin et /sujets
@@ -9,7 +9,10 @@ const  middleware=(request: NextRequest)=> {
     const isLoggedIn = request.cookies.get('admin-auth')?.value === 'true';
 
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      // Redirige vers /login avec le paramètre 'from' pour afficher un message
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

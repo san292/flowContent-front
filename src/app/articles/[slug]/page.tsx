@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getArticleBySlug } from "@/lib/api";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,23 +39,14 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { data, error } = await supabase
-    .from("articles")
-    .select(
-      "id, title, description, content, slug, image, image_url, category, tags, created_at"
-    )
-    .eq("slug", slug)
-    .eq("status", "published")
-    .limit(1)
-    .maybeSingle();
 
-  if (error) {
-    console.error("[Server] Supabase error:", error.message);
-    notFound();
-  }
-  if (!data) notFound();
+  try {
+    // ✅ Utilise l'API backend au lieu de Supabase
+    const data = await getArticleBySlug(slug);
 
-  const a = data as unknown as Article;
+    if (!data) notFound();
+
+    const a = data as unknown as Article;
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -141,4 +132,8 @@ export default async function ArticlePage({
       </div>
     </main>
   );
+  } catch (error) {
+    console.error("[Server] API error:", error);
+    notFound();
+  }
 }

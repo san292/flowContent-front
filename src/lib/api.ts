@@ -194,6 +194,90 @@ export async function getArticleBySlug(slug: string): Promise<Article> {
   return request<Article>(`/articles/public/${slug}`);
 }
 
+// ===== SOCIAL MEDIA API =====
+
+export async function generateSocialContent(
+  data: import("@/types/ApiTypes").SocialContentRequest
+): Promise<import("@/types/ApiTypes").SocialContentResponse> {
+  return request<import("@/types/ApiTypes").SocialContentResponse>(
+    "/social-media/generate",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export async function generateSocialContentAll(
+  data: import("@/types/ApiTypes").SocialGenerateAllRequest
+): Promise<import("@/types/ApiTypes").SocialGenerateAllResponse> {
+  return request<import("@/types/ApiTypes").SocialGenerateAllResponse>(
+    "/social-media/generate/all",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export async function getSocialPosts(params: {
+  limit?: number;
+  page?: number;
+} = {}): Promise<import("@/types/ApiTypes").SocialPostsResponse> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      queryParams.append(key, value.toString());
+    }
+  });
+
+  return request<import("@/types/ApiTypes").SocialPostsResponse>(
+    `/social-media?${queryParams.toString()}`
+  );
+}
+
+export async function schedulePost(
+  data: import("@/types/ApiTypes").SchedulePostRequest
+): Promise<{ success: boolean; message: string }> {
+  return request<{ success: boolean; message: string }>(
+    "/social-media/schedule",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export async function getScheduledPosts(params: {
+  platform?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+} = {}): Promise<{ success: boolean; data: import("@/types/ApiTypes").ScheduledPost[] }> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      queryParams.append(key, value.toString());
+    }
+  });
+
+  return request<{ success: boolean; data: import("@/types/ApiTypes").ScheduledPost[] }>(
+    `/social-media/scheduled?${queryParams.toString()}`
+  );
+}
+
+export async function deleteScheduledPost(id: string): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(`/social-media/scheduled/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function publishScheduledPost(id: string): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(`/social-media/scheduled/${id}/publish`, {
+    method: "POST",
+  });
+}
+
 export const apiService = {
   generateArticleFromDashboard,
   processArticleFromDashboard,
@@ -216,4 +300,13 @@ export const apiService = {
   fixInternalLinksLanguage,
   createBatchArticles,
   getArticleBySlug,
+
+  // Social Media
+  generateSocialContent,
+  generateSocialContentAll,
+  getSocialPosts,
+  schedulePost,
+  getScheduledPosts,
+  deleteScheduledPost,
+  publishScheduledPost,
 };

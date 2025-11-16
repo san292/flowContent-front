@@ -368,7 +368,7 @@ function Arrow() {
 
 export default async function HomePage() {
   try {
-    const { articles } = await getPublicArticles({ limit: 100 });
+    const { articles } = await getPublicArticles({ limit: 1000 });
     const items = articles ?? [];
 
   return (

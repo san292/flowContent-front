@@ -163,3 +163,127 @@ export type DashboardResponse = {
   recentActivity: DashboardActivity[];
   domainStats: DashboardDomainStats[];
 };
+
+// ===== TYPES RÉSEAUX SOCIAUX =====
+
+export type SocialNetwork = "twitter" | "linkedin" | "facebook" | "instagram" | "tiktok";
+
+export type Language = "fr" | "darija" | "en" | "es" | "ar" | "de" | "it" | "pt";
+
+export type SocialContentRequest = {
+  network: SocialNetwork;
+  language?: Language;
+  article: {
+    title: string;
+    content: string;
+    description?: string;
+    tags?: string[];
+  };
+  userId: string;
+};
+
+export type SocialContentResponse = {
+  success: boolean;
+  data: {
+    text: string;
+    hashtags: string[];
+    cardStyle?: string;      // Twitter
+    format?: string;         // LinkedIn
+    firstComment?: string;   // Instagram
+  };
+};
+
+export type SocialGenerateAllRequest = {
+  networks: SocialNetwork[];
+  language?: Language;
+  article: {
+    id: string;
+    title: string;
+    content: string;
+    description?: string;
+    tags?: string[];
+  };
+};
+
+export type SocialGenerateAllResponse = {
+  success: boolean;
+  data: {
+    twitter?: {
+      text: string;
+      hashtags: string[];
+      cardStyle: string;
+    };
+    linkedin?: {
+      text: string;
+      hashtags: string[];
+      format: string;
+    };
+    facebook?: {
+      text: string;
+      hashtags: string[];
+    };
+    instagram?: {
+      text: string;
+      hashtags: string[];
+      firstComment: string;
+    };
+    tiktok?: {
+      text: string;
+      hashtags: string[];
+      hooks: string[];
+    };
+  };
+};
+
+export type ScheduledPost = {
+  id: string;
+  platform: SocialNetwork;
+  content: string;
+  scheduledFor: string;
+  mediaUrls?: string[];
+  hashtags?: string[];
+  status: "pending" | "published" | "failed";
+  createdAt: string;
+  publishedAt?: string;
+  error?: string;
+};
+
+export type PostContent = {
+  text: string;
+  hashtags?: string[];
+  media?: Array<{
+    url: string;
+    type: 'image' | 'video';
+    altText?: string;
+  }>;
+  link?: string;
+  cardStyle?: string;      // Twitter
+  format?: string;         // LinkedIn
+  firstComment?: string;   // Instagram
+  hooks?: string[];        // TikTok
+};
+
+export type SchedulePostRequest = {
+  platform: SocialNetwork;
+  content: PostContent;
+  scheduledFor: string;
+};
+
+export type SocialPost = {
+  id: string;
+  content: PostContent;  // Maintenant un objet au lieu d'un string
+  network: SocialNetwork;
+  status: "draft" | "published" | "failed";
+  userId: string;
+  createdAt: string;
+};
+
+export type SocialPostsResponse = {
+  success: boolean;
+  data: SocialPost[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+};

@@ -20,10 +20,21 @@ export async function request<T>(
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
+      let errorData: any = {};
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
+        errorData = await response.json().catch(() => ({}));
+      } else {
+        // Si ce n'est pas du JSON, lire comme texte
+        const text = await response.text().catch(() => "");
+        errorData = { message: text };
+      }
+
+      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      console.error(`❌ Backend error [${response.status}]:`, errorData);
+
+      throw new Error(errorMessage);
     }
      if (response.status === 304) {
       return {} as T; // Retourner un objet vide pour le 304

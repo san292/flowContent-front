@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { apiService } from "@/lib/api";
 
 type AnalyticsData = {
   totalArticles: number;
@@ -18,21 +18,25 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<"week" | "month" | "all">("month");
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchAnalytics();
   }, [dateRange]);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchAnalytics();
+    setRefreshing(false);
+  };
+
   const fetchAnalytics = async () => {
     try {
-      const { data: articles, error } = await supabase
-        .from("articles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // ✅ Utilise l'API backend au lieu de Supabase
+      const response = await apiService.getArticles({ limit: 1000 });
+      const articles = response.articles || [];
 
-      if (error) throw error;
-
-      if (!articles) {
+      if (!articles || articles.length === 0) {
         setAnalytics({
           totalArticles: 0,
           publishedThisWeek: 0,
@@ -51,6 +55,19 @@ export default function AnalyticsPage() {
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+      // ✅ Filtrer les articles selon le dateRange sélectionné
+      let filteredArticles = articles;
+      if (dateRange === "week") {
+        filteredArticles = articles.filter(
+          (a) => new Date(a.created_at) >= oneWeekAgo
+        );
+      } else if (dateRange === "month") {
+        filteredArticles = articles.filter(
+          (a) => new Date(a.created_at) >= oneMonthAgo
+        );
+      }
+      // Si dateRange === "all", on garde tous les articles
+
       const publishedThisWeek = articles.filter(
         (a) => a.status === "published" && new Date(a.created_at) >= oneWeekAgo
       ).length;
@@ -59,8 +76,8 @@ export default function AnalyticsPage() {
         (a) => a.status === "published" && new Date(a.created_at) >= oneMonthAgo
       ).length;
 
-      // Top catégories
-      const categoryCount: Record<string, number> = articles.reduce(
+      // Top catégories (sur les articles filtrés)
+      const categoryCount: Record<string, number> = filteredArticles.reduce(
         (acc, article) => {
           const cat = article.category || "Non catégorisé";
           acc[cat] = (acc[cat] || 0) + 1;
@@ -74,8 +91,8 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      // Top sujets
-      const topicCount: Record<string, number> = articles.reduce(
+      // Top sujets (sur les articles filtrés)
+      const topicCount: Record<string, number> = filteredArticles.reduce(
         (acc, article) => {
           const topic = article.original_topic || "Sans sujet";
           acc[topic] = (acc[topic] || 0) + 1;
@@ -89,8 +106,8 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      // Distribution des statuts
-      const statusCount: Record<string, number> = articles.reduce(
+      // Distribution des statuts (sur les articles filtrés)
+      const statusCount: Record<string, number> = filteredArticles.reduce(
         (acc, article) => {
           acc[article.status] = (acc[article.status] || 0) + 1;
           return acc;
@@ -103,7 +120,9 @@ export default function AnalyticsPage() {
         return {
           status,
           count,
-          percentage: Math.round((count / articles.length) * 100),
+          percentage: filteredArticles.length > 0
+            ? Math.round((count / filteredArticles.length) * 100)
+            : 0,
         };
       });
 
@@ -123,7 +142,7 @@ export default function AnalyticsPage() {
       }
 
       setAnalytics({
-        totalArticles: articles.length,
+        totalArticles: filteredArticles.length, // ✅ Utilise les articles filtrés
         publishedThisWeek,
         publishedThisMonth,
         topCategories,
@@ -224,10 +243,14 @@ export default function AnalyticsPage() {
                 <option value="all">Toute la période</option>
               </select>
               <button
-                onClick={fetchAnalytics}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Actualiser
+                {refreshing && (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                )}
+                {refreshing ? "Actualisation..." : "Actualiser"}
               </button>
             </div>
           </div>
