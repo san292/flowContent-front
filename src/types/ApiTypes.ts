@@ -287,3 +287,71 @@ export type SocialPostsResponse = {
     total: number;
   };
 };
+
+// ===== TYPES SOCIAL MEDIA KIT =====
+
+export type SocialMediaKit = {
+  network: string;
+  text: string;
+  hashtags: string[];
+  image?: {
+    url: string;
+    generatedBy: 'leonardo-ai' | 'unsplash';
+    prompt?: string;
+  };
+  copyPasteText: string;
+  instructions: string;
+  visualPreview?: string;
+};
+
+export type SocialMediaKitRequest = {
+  article: {
+    title: string;
+    content: string;
+    description?: string;
+    tags?: string[];
+  };
+  networks: string[];
+  language?: string;
+};
+
+export type SocialMediaKitResponse = {
+  success: boolean;
+  data: {
+    kits: { [network: string]: SocialMediaKit };
+    htmlPreview?: string;
+  };
+};
+
+// ===== TYPES VIDÉOS SVD =====
+
+export type VideoJob = {
+  jobId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  videoUrl?: string;
+  duration?: number;
+  fps?: number;
+  frames?: number;
+  provider?: 'replicate';
+  progress?: number;
+  createdAt: string;
+  completedAt?: string;
+  error?: string | null;
+  articleId?: string;
+  domainId?: string;
+};
+
+export type GenerateVideoRequest = {
+  imageUrl: string;
+  motionBucketId?: number;  // 1-255, défaut: 127
+  fps?: number;              // 5-30, défaut: 6
+  frames?: number;           // 14-25, défaut: 14
+  seed?: number;
+  domainId?: string;
+  articleId?: string;
+};
+
+export type VideoHealthResponse = {
+  healthy: boolean;
+  provider: string;
+};

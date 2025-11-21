@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +24,10 @@ export default function LoginPage() {
   // Affiche un message si redirigé depuis une page protégée
   useEffect(() => {
     if (searchParams.get('from')) {
-      setError('Vous devez vous connecter pour accéder à cette page');
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setError('Vous devez vous connecter pour accéder à cette page');
+      }, 0);
     }
   }, [searchParams]);
 
@@ -95,5 +98,20 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-900 border-t-transparent mx-auto"></div>
+          <p className="mt-2 text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

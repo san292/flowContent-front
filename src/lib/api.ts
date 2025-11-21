@@ -14,8 +14,11 @@ import {
   JobStatusResponse,
   PaginatedArticlesResponse,
   UpdateArticleData,
+  SocialMediaKitRequest,
+  SocialMediaKitResponse,
 } from "@/types/ApiTypes";
 import { request } from "./apiHelpers";
+import { API_BASE_URL } from "./config";
 
 // ===== DASHBOARD API =====
 
@@ -278,6 +281,55 @@ export async function publishScheduledPost(id: string): Promise<{ success: boole
   });
 }
 
+// ===== SOCIAL MEDIA KIT API =====
+
+export async function generateSocialMediaKit(
+  data: SocialMediaKitRequest,
+  generateImages = true
+): Promise<SocialMediaKitResponse> {
+  const queryParams = new URLSearchParams({
+    format: 'json',
+    generateImages: generateImages.toString(),
+  });
+
+  return request<SocialMediaKitResponse>(
+    `/social-media/export?${queryParams.toString()}`,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export async function generateSocialMediaKitHTML(
+  data: SocialMediaKitRequest
+): Promise<string> {
+  const queryParams = new URLSearchParams({
+    format: 'html',
+    generateImages: 'true',
+  });
+
+  const response = await fetch(
+    `${API_BASE_URL}/social-media/export?${queryParams.toString()}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to generate HTML kit');
+  }
+
+  return response.text();
+}
+
+// ===== VIDEOS SVD API =====
+export * from './videosSvd';
+
 export const apiService = {
   generateArticleFromDashboard,
   processArticleFromDashboard,
@@ -309,4 +361,8 @@ export const apiService = {
   getScheduledPosts,
   deleteScheduledPost,
   publishScheduledPost,
+
+  // Social Media Kit
+  generateSocialMediaKit,
+  generateSocialMediaKitHTML,
 };

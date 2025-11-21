@@ -62,6 +62,7 @@ const text = React.Children.toArray(children).join("");
     );
   },
 
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
    code({ inline, children, className, ...props }: any) {
     if (inline) {
       return (

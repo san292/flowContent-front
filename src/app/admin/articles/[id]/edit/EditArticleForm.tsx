@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiService } from "@/lib/api";
 import { Article, UpdateArticleData } from "@/types/ApiTypes";
 import Link from "next/link";
+import SocialMediaKitModal from "@/components/SocialMediaKitModal";
 
 type EditArticleFormProps = {
   article: Article;
@@ -15,6 +16,7 @@ export default function EditArticleForm({ article: initialArticle }: EditArticle
   const [article, setArticle] = useState<Article>(initialArticle);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showSocialKitModal, setShowSocialKitModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,22 +172,39 @@ export default function EditArticleForm({ article: initialArticle }: EditArticle
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end space-x-4">
-          <Link
-            href="/admin/articles"
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            Annuler
-          </Link>
+        <div className="flex justify-between items-center">
           <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            type="button"
+            onClick={() => setShowSocialKitModal(true)}
+            className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white hover:from-blue-700 hover:to-purple-700"
           >
-            {saving ? "Sauvegarde..." : "Sauvegarder"}
+            📱 Kit Social Media
           </button>
+
+          <div className="flex space-x-4">
+            <Link
+              href="/admin/articles"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Annuler
+            </Link>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Sauvegarde..." : "Sauvegarder"}
+            </button>
+          </div>
         </div>
       </form>
+
+      {/* Modal Kit Social Media */}
+      <SocialMediaKitModal
+        article={article}
+        isOpen={showSocialKitModal}
+        onClose={() => setShowSocialKitModal(false)}
+      />
     </>
   );
 }

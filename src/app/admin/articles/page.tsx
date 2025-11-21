@@ -5,6 +5,7 @@ import { apiService } from "@/lib/api";
 import { UpdateArticleData } from "@/types/ApiTypes";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import SocialMediaKitModal from "@/components/SocialMediaKitModal";
 
 type Article = {
   id: string;
@@ -29,8 +30,24 @@ const ArticlesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedArticleForKit, setSelectedArticleForKit] = useState<any | null>(null);
+  const [loadingFullArticle, setLoadingFullArticle] = useState(false);
 
    const { showToast, ToastBanner } = useToast();
+
+  const openSocialKit = async (article: Article) => {
+    setLoadingFullArticle(true);
+    try {
+      // Récupérer l'article complet avec le contenu
+      const fullArticle = await apiService.getArticleById(article.id);
+      setSelectedArticleForKit(fullArticle);
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'article:', error);
+      showToast('Erreur lors du chargement de l\'article', 'error');
+    } finally {
+      setLoadingFullArticle(false);
+    }
+  };
 
 useEffect(() => {
     const fetchArticles = async () => {
@@ -170,8 +187,9 @@ useEffect(() => {
 
 
   return (
-    <main className="min-h-screen bg-gray-50">
-   <ToastBanner />;
+    <>
+      <main className="min-h-screen bg-gray-50">
+        <ToastBanner />
 
       {/* Header */}
       <header className="bg-white shadow">
@@ -426,6 +444,30 @@ useEffect(() => {
                         </Link>
                       )}
 
+                      {/* Bouton Kit Social Media */}
+                      {article.status === "published" && (
+                        <button
+                          onClick={() => openSocialKit(article)}
+                          disabled={loadingFullArticle}
+                          className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                          title="Kit Social Media"
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                      )}
+
                       {/* Bouton supprimer */}
                       <button
                         onClick={() => deleteArticle(article.id)}
@@ -489,6 +531,16 @@ useEffect(() => {
         </div>
       </div>
     </main>
+
+    {/* Modal Kit Social Media */}
+    {selectedArticleForKit && (
+      <SocialMediaKitModal
+        article={selectedArticleForKit}
+        isOpen={!!selectedArticleForKit}
+        onClose={() => setSelectedArticleForKit(null)}
+      />
+    )}
+    </>
   );
 };
 export default ArticlesManagement;

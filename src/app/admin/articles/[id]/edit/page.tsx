@@ -6,10 +6,10 @@ import EditArticleForm from "./EditArticleForm";
 export default async function EditArticlePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   let article;
-  const {id}= await params
+  const { id } = await params
 
   try {
     article = await apiService.getArticleById(id);

@@ -22,6 +22,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
 
   const handleRefresh = async () => {

@@ -32,11 +32,12 @@ export default function Navbar() {
     router.push('/');
   };
 
-  const navigation = [
+  const navigation: Array<{ name: string; href: string; special?: boolean }> = [
     { name: "Accueil", href: "/" },
     { name: "Articles", href: "/articles" },
     { name: "Admin", href: "/admin" },
     { name: "Sujets", href: "/admin/topics" },
+    { name: "Blog Studio", href: "/admin/blog-studio", special: true },
   ];
 
   const isActive = (href: string) => {
@@ -67,7 +68,7 @@ export default function Navbar() {
                 </svg>
               </div>
               <span className="text-xl font-bold text-neutral-900">
-                Next Blog
+                FlowKorner
               </span>
             </Link>
           </div>
@@ -78,14 +79,15 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`
-                  rounded-lg px-4 py-2 text-sm font-medium transition-colors
-                  ${
-                    isActive(item.href)
-                      ? "bg-neutral-100 text-neutral-900"
-                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                  }
-                `}
+                className={
+                  item.special
+                    ? `rounded-lg px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all shadow-sm`
+                    : `rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive(item.href)
+                          ? "bg-neutral-100 text-neutral-900"
+                          : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                      }`
+                }
               >
                 {item.name}
               </Link>
@@ -160,14 +162,15 @@ export default function Navbar() {
                 key={item.name}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`
-                  block rounded-lg px-4 py-3 text-base font-medium transition-colors
-                  ${
-                    isActive(item.href)
-                      ? "bg-neutral-100 text-neutral-900"
-                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                  }
-                `}
+                className={
+                  item.special
+                    ? `block rounded-lg px-4 py-3 text-base font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all shadow-sm`
+                    : `block rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                        isActive(item.href)
+                          ? "bg-neutral-100 text-neutral-900"
+                          : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                      }`
+                }
               >
                 {item.name}
               </Link>

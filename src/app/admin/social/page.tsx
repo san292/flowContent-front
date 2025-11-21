@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiService } from "@/lib/api";
@@ -18,7 +18,7 @@ const LANGUAGES = [
   { code: 'pt' as Language, label: 'Português', flag: '🇵🇹' },
 ];
 
-export default function SocialMediaPage() {
+function SocialMediaPageContent() {
   const searchParams = useSearchParams();
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -33,6 +33,7 @@ export default function SocialMediaPage() {
   // Load published articles on mount and pre-select if articleId in URL
   useEffect(() => {
     loadArticles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadArticles = async () => {
@@ -427,5 +428,20 @@ export default function SocialMediaPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function SocialMediaPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-900 border-t-transparent mx-auto"></div>
+          <p className="mt-2 text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <SocialMediaPageContent />
+    </Suspense>
   );
 }

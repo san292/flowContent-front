@@ -366,6 +366,9 @@ function Arrow() {
   );
 }
 
+// Force dynamic rendering to allow data fetching at runtime
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   try {
     const { articles } = await getPublicArticles({ limit: 1000 });
@@ -552,13 +555,13 @@ export default async function HomePage() {
       )}
     </main>
   );
-   } catch (error: any) {
-    console.error("[Frontend] Erreur API /articles/public:", error?.message);
+   } catch (error: unknown) {
+    console.error("[Frontend] Erreur API /articles/public:", error instanceof Error ? error.message : "Unknown error");
     return (
       <main className="mx-auto max-w-6xl px-6 py-16">
         <h1 className="text-4xl font-bold tracking-tight text-white">Tous les articles</h1>
         <p className="mt-4 rounded-lg border border-red-900/40 bg-red-900/20 px-4 py-3 text-red-200">
-          Erreur lors du chargement des articles : {error?.message ?? "Inconnue"}
+          Erreur lors du chargement des articles : {error instanceof Error ? error.message : "Inconnue"}
         </p>
       </main>
     );

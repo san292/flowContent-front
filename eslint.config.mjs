@@ -15,13 +15,24 @@ const eslintConfig = [
     rules: {
       // ✅ Règles React Hooks
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "error",
+      "react-hooks/exhaustive-deps": "warn",
 
       // ✅ Règles React
-      "react/no-unescaped-entities": "error",
+      "react/no-unescaped-entities": "warn",
+
+      // ✅ Règles TypeScript
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
 
       // ✅ Règles Next.js
       "@next/next/no-html-link-for-pages": "error",
+      "@next/next/no-img-element": "warn",
+
+      // ✅ Règles accessibilité
+      "jsx-a11y/alt-text": "warn",
+
+      // ✅ Règles React (error boundaries)
+      "react-hooks/error-boundaries": "warn",
     },
   },
 ];

@@ -20,7 +20,7 @@ export async function request<T>(
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      let errorData: any = {};
+      let errorData: Record<string, unknown> = {};
       const contentType = response.headers.get("content-type");
 
       if (contentType && contentType.includes("application/json")) {
@@ -31,7 +31,10 @@ export async function request<T>(
         errorData = { message: text };
       }
 
-      const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      const errorMessage =
+        (typeof errorData.message === 'string' ? errorData.message : null) ||
+        (typeof errorData.error === 'string' ? errorData.error : null) ||
+        `HTTP ${response.status}: ${response.statusText}`;
       console.error(`❌ Backend error [${response.status}]:`, errorData);
 
       throw new Error(errorMessage);

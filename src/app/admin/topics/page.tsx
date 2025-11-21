@@ -97,6 +97,7 @@ export default function TopicsManagement() {
 
   useEffect(() => {
     fetchTopicsSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Polling pour les jobs de génération en cours

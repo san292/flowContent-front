@@ -59,7 +59,7 @@ export default async function ArticlePage({
       </div>
 
       {/* title */}
-      <h1 className="text-4xl font-extrabold tracking-tight text-neutral-900">
+      <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
         {a.title}
       </h1>
 

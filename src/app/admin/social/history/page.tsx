@@ -27,9 +27,9 @@ export default function SocialHistoryPage() {
       const response = await apiService.getSocialPosts({ limit: 1000 });
       console.log("📥 Réponse reçue:", response);
 
-      if (response.success && response.data && response.data.posts) {
-        setPosts(response.data.posts);
-        console.log(`✅ ${response.data.posts.length} posts chargés`);
+      if (response.success && response.data && Array.isArray(response.data)) {
+        setPosts(response.data);
+        console.log(`✅ ${response.data.length} posts chargés`);
       } else {
         console.warn("⚠️ Réponse sans posts:", response);
         setPosts([]);

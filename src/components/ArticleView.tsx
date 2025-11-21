@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
+import SocialMediaKitModal from "./SocialMediaKitModal";
 
 type Article = {
   id: string;
@@ -41,6 +42,7 @@ export default function ArticleView({ article }: { article: Article }) {
     return (localStorage.getItem("articleTheme") as Theme) || "dark-editorial";
   });
   const [progress, setProgress] = useState(0);
+  const [showSocialKitModal, setShowSocialKitModal] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const hasBody = Boolean(article?.content?.trim());
   const hasTags = Boolean(article?.tags && article?.tags.length > 0);
@@ -333,7 +335,17 @@ export default function ArticleView({ article }: { article: Article }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowSocialKitModal(true)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  isDark
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                    : "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                }`}
+              >
+                📱 Kit Social Media
+              </button>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(shareUrl);
@@ -429,6 +441,13 @@ export default function ArticleView({ article }: { article: Article }) {
 
       {/* Footer spacer */}
       <div className="h-16" />
+
+      {/* Social Media Kit Modal */}
+      <SocialMediaKitModal
+        article={article}
+        isOpen={showSocialKitModal}
+        onClose={() => setShowSocialKitModal(false)}
+      />
     </main>
   );
 }
