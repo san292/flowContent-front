@@ -61,8 +61,8 @@ export default function SocialHistoryPage() {
     if (searchTerm) {
       const query = searchTerm.toLowerCase();
       result = result.filter((post) => {
-        const contentText = typeof post.content === 'string' ? post.content : post.content.text;
-        const hashtags = typeof post.content === 'string' ? [] : (post.content.hashtags || []);
+        const contentText = post.content;
+        const hashtags = post.hashtags || [];
         return contentText.toLowerCase().includes(query) ||
           hashtags.some((tag) => tag.toLowerCase().includes(query));
       });
@@ -70,7 +70,7 @@ export default function SocialHistoryPage() {
 
     // Tri par date (plus récent en premier)
     return result.sort((a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }, [posts, filter, searchTerm]);
 
