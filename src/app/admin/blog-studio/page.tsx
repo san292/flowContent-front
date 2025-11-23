@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import VideoGenerator from './components/video/VideoGenerator';
 import VideoGallery from './components/video/VideoGallery';
+import { UnsplashManager } from '@/components/unsplash';
 
 type StudioTab = 'images' | 'videos' | 'audio';
 
 export default function BlogStudioPage() {
-  const [activeTab, setActiveTab] = useState<StudioTab>('videos');
+  const [activeTab, setActiveTab] = useState<StudioTab>('images');
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -35,7 +36,7 @@ export default function BlogStudioPage() {
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
               }`}
             >
-              📸 Images (Leonardo AI)
+              📸 Images (Unsplash)
             </button>
             <button
               onClick={() => setActiveTab('videos')}
@@ -66,29 +67,15 @@ export default function BlogStudioPage() {
       <div className="mx-auto max-w-7xl px-6 py-8">
         {activeTab === 'images' && (
           <div className="rounded-lg bg-white p-8 shadow">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-blue-100">
-                <svg
-                  className="h-12 w-12 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Module Images Leonardo AI
-              </h3>
-              <p className="mt-2 text-gray-500">
-                Génération d&apos;images avec Leonardo AI - Module à intégrer prochainement
-              </p>
-            </div>
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">
+              Gestionnaire de Photos Unsplash
+            </h2>
+            <UnsplashManager
+              onPhotoSelect={(imageUrl, photoData) => {
+                console.log('Photo sélectionnée:', imageUrl, photoData);
+                // Vous pouvez ajouter ici la logique pour utiliser la photo
+              }}
+            />
           </div>
         )}
 

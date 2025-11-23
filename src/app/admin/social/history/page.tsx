@@ -27,9 +27,9 @@ export default function SocialHistoryPage() {
       const response = await apiService.getSocialPosts({ limit: 1000 });
       console.log("📥 Réponse reçue:", response);
 
-      if (response.success && response.data && Array.isArray(response.data)) {
-        setPosts(response.data);
-        console.log(`✅ ${response.data.length} posts chargés`);
+      if (response.success && response.data && response.data.posts && Array.isArray(response.data.posts)) {
+        setPosts(response.data.posts);
+        console.log(`✅ ${response.data.posts.length} posts chargés`);
       } else {
         console.warn("⚠️ Réponse sans posts:", response);
         setPosts([]);
@@ -337,44 +337,39 @@ export default function SocialHistoryPage() {
                           {post.status}
                         </span>
                         <span className="text-sm text-neutral-500">
-                          {formatDate(post.createdAt)}
+                          {formatDate(post.created_at)}
                         </span>
                       </div>
 
                       {/* Content */}
                       <p className="text-neutral-900 mb-2 line-clamp-3">
-                        {typeof post.content === 'string' ? post.content : post.content.text}
+                        {post.content}
                       </p>
 
                       {/* Hashtags */}
-                      {(() => {
-                        const hashtags = typeof post.content === 'string' ? [] : (post.content.hashtags || []);
-                        return hashtags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {hashtags.slice(0, 5).map((tag, i) => (
-                              <span key={i} className="text-sm text-blue-600">
-                                #{tag}
-                              </span>
-                            ))}
-                            {hashtags.length > 5 && (
-                              <span className="text-sm text-neutral-500">
-                                +{hashtags.length - 5}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
+                      {post.hashtags && post.hashtags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {post.hashtags.slice(0, 5).map((tag, i) => (
+                            <span key={i} className="text-sm text-blue-600">
+                              #{tag}
+                            </span>
+                          ))}
+                          {post.hashtags.length > 5 && (
+                            <span className="text-sm text-neutral-500">
+                              +{post.hashtags.length - 5}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
                     <div className="ml-4 flex items-center space-x-2">
                       <button
                         onClick={() => {
-                          const contentText = typeof post.content === 'string' ? post.content : post.content.text;
-                          const hashtags = typeof post.content === 'string' ? [] : (post.content.hashtags || []);
-                          const text = hashtags.length > 0
-                            ? `${contentText}\n\n${hashtags.map(t => `#${t}`).join(' ')}`
-                            : contentText;
+                          const text = post.hashtags && post.hashtags.length > 0
+                            ? `${post.content}\n\n${post.hashtags.map(t => `#${t}`).join(' ')}`
+                            : post.content;
                           navigator.clipboard.writeText(text);
                         }}
                         className="rounded-md bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200"

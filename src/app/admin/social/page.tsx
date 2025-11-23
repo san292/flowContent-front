@@ -96,6 +96,120 @@ function SocialMediaPageContent() {
     }
   };
 
+  const handleCopyAll = () => {
+    if (!generatedContent || !generatedContent.success) {
+      return;
+    }
+
+    let allContent = "📱 CONTENU RÉSEAUX SOCIAUX\n";
+    allContent += "=" + "=".repeat(50) + "\n\n";
+
+    if (generatedContent.data.twitter) {
+      allContent += "🐦 TWITTER / X\n";
+      allContent += "-".repeat(50) + "\n";
+      allContent += generatedContent.data.twitter.text + "\n\n";
+      allContent += generatedContent.data.twitter.hashtags.map(t => `#${t}`).join(' ') + "\n\n";
+      allContent += "=".repeat(50) + "\n\n";
+    }
+
+    if (generatedContent.data.linkedin) {
+      allContent += "💼 LINKEDIN\n";
+      allContent += "-".repeat(50) + "\n";
+      allContent += generatedContent.data.linkedin.text + "\n\n";
+      allContent += generatedContent.data.linkedin.hashtags.map(t => `#${t}`).join(' ') + "\n\n";
+      allContent += "=".repeat(50) + "\n\n";
+    }
+
+    if (generatedContent.data.facebook) {
+      allContent += "👥 FACEBOOK\n";
+      allContent += "-".repeat(50) + "\n";
+      allContent += generatedContent.data.facebook.text + "\n\n";
+      allContent += generatedContent.data.facebook.hashtags.map(t => `#${t}`).join(' ') + "\n\n";
+      allContent += "=".repeat(50) + "\n\n";
+    }
+
+    if (generatedContent.data.instagram) {
+      allContent += "📸 INSTAGRAM\n";
+      allContent += "-".repeat(50) + "\n";
+      allContent += generatedContent.data.instagram.text + "\n\n";
+      if (generatedContent.data.instagram.firstComment) {
+        allContent += "Premier commentaire:\n" + generatedContent.data.instagram.firstComment + "\n\n";
+      }
+      allContent += generatedContent.data.instagram.hashtags.map(t => `#${t}`).join(' ') + "\n\n";
+      allContent += "=".repeat(50) + "\n\n";
+    }
+
+    if (generatedContent.data.tiktok) {
+      allContent += "🎵 TIKTOK\n";
+      allContent += "-".repeat(50) + "\n";
+      allContent += generatedContent.data.tiktok.text + "\n\n";
+      allContent += generatedContent.data.tiktok.hashtags.map(t => `#${t}`).join(' ') + "\n\n";
+      allContent += "=".repeat(50) + "\n\n";
+    }
+
+    navigator.clipboard.writeText(allContent);
+    alert("✅ Tout le contenu a été copié dans le presse-papier !");
+  };
+
+  const handleDownload = () => {
+    if (!generatedContent || !generatedContent.success) {
+      return;
+    }
+
+    let fileContent = "CONTENU RÉSEAUX SOCIAUX\n";
+    fileContent += "Généré le: " + new Date().toLocaleDateString('fr-FR') + "\n";
+    fileContent += "Article: " + (selectedArticle?.title || "Sans titre") + "\n";
+    fileContent += "=" + "=".repeat(70) + "\n\n";
+
+    if (generatedContent.data.twitter) {
+      fileContent += "TWITTER / X\n";
+      fileContent += "-".repeat(70) + "\n";
+      fileContent += generatedContent.data.twitter.text + "\n\n";
+      fileContent += generatedContent.data.twitter.hashtags.map(t => `#${t}`).join(' ') + "\n\n\n";
+    }
+
+    if (generatedContent.data.linkedin) {
+      fileContent += "LINKEDIN\n";
+      fileContent += "-".repeat(70) + "\n";
+      fileContent += generatedContent.data.linkedin.text + "\n\n";
+      fileContent += generatedContent.data.linkedin.hashtags.map(t => `#${t}`).join(' ') + "\n\n\n";
+    }
+
+    if (generatedContent.data.facebook) {
+      fileContent += "FACEBOOK\n";
+      fileContent += "-".repeat(70) + "\n";
+      fileContent += generatedContent.data.facebook.text + "\n\n";
+      fileContent += generatedContent.data.facebook.hashtags.map(t => `#${t}`).join(' ') + "\n\n\n";
+    }
+
+    if (generatedContent.data.instagram) {
+      fileContent += "INSTAGRAM\n";
+      fileContent += "-".repeat(70) + "\n";
+      fileContent += generatedContent.data.instagram.text + "\n\n";
+      if (generatedContent.data.instagram.firstComment) {
+        fileContent += "Premier commentaire:\n" + generatedContent.data.instagram.firstComment + "\n\n";
+      }
+      fileContent += generatedContent.data.instagram.hashtags.map(t => `#${t}`).join(' ') + "\n\n\n";
+    }
+
+    if (generatedContent.data.tiktok) {
+      fileContent += "TIKTOK\n";
+      fileContent += "-".repeat(70) + "\n";
+      fileContent += generatedContent.data.tiktok.text + "\n\n";
+      fileContent += generatedContent.data.tiktok.hashtags.map(t => `#${t}`).join(' ') + "\n\n\n";
+    }
+
+    const blob = new Blob([fileContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `social-media-${selectedArticle?.slug || 'content'}-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSave = async () => {
     if (!generatedContent || !generatedContent.success) {
       setError("Aucun contenu à sauvegarder");
@@ -320,46 +434,73 @@ function SocialMediaPageContent() {
       {/* Generated Content Preview */}
       {generatedContent && generatedContent.success && (
         <div className="space-y-6">
-          {/* Header with Save Button */}
+          {/* Header with Action Buttons */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-neutral-900">
               Contenu généré - Prévisualisations
             </h2>
-            <button
-              onClick={handleSave}
-              disabled={saving || saveSuccess}
-              className={`flex items-center gap-2 rounded-lg px-6 py-3 font-semibold text-white transition-colors ${
-                saveSuccess
-                  ? "bg-green-600 cursor-not-allowed"
-                  : saving
-                  ? "bg-neutral-400 cursor-not-allowed"
-                  : "bg-neutral-900 hover:bg-neutral-800"
-              }`}
-            >
-              {saveSuccess ? (
-                <>
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Sauvegardé !
-                </>
-              ) : saving ? (
-                <>
-                  <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Sauvegarde...
-                </>
-              ) : (
-                <>
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                  Sauvegarder tous les posts
-                </>
-              )}
-            </button>
+            <div className="flex gap-3">
+              {/* Copier tout */}
+              <button
+                onClick={handleCopyAll}
+                className="flex items-center gap-2 rounded-lg border-2 border-blue-600 bg-blue-50 px-4 py-2.5 font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                title="Copier tout le contenu dans le presse-papier"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copier tout
+              </button>
+
+              {/* Télécharger */}
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 rounded-lg border-2 border-green-600 bg-green-50 px-4 py-2.5 font-semibold text-green-700 transition-colors hover:bg-green-100"
+                title="Télécharger tout le contenu en fichier TXT"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Télécharger
+              </button>
+
+              {/* Sauvegarder */}
+              <button
+                onClick={handleSave}
+                disabled={saving || saveSuccess}
+                className={`flex items-center gap-2 rounded-lg px-6 py-2.5 font-semibold text-white transition-colors ${
+                  saveSuccess
+                    ? "bg-green-600 cursor-not-allowed"
+                    : saving
+                    ? "bg-neutral-400 cursor-not-allowed"
+                    : "bg-neutral-900 hover:bg-neutral-800"
+                }`}
+              >
+                {saveSuccess ? (
+                  <>
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Sauvegardé !
+                  </>
+                ) : saving ? (
+                  <>
+                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Sauvegarde...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Sauvegarder
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Success Message */}

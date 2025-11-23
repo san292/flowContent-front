@@ -271,20 +271,30 @@ export type SchedulePostRequest = {
 
 export type SocialPost = {
   id: string;
-  content: PostContent;  // Maintenant un objet au lieu d'un string
+  content: string;  // Le backend retourne un string, pas un objet
   network: SocialNetwork;
+  hashtags: string[];
   status: "draft" | "published" | "failed";
-  userId: string;
-  createdAt: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  card_style?: string | null;
+  format?: string | null;
+  first_comment?: string | null;
+  platform_post_id?: string | null;
+  published_at?: string | null;
+  error_message?: string | null;
 };
 
 export type SocialPostsResponse = {
   success: boolean;
-  data: SocialPost[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
+  data: {
+    posts: SocialPost[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+    };
   };
 };
 
@@ -354,4 +364,57 @@ export type GenerateVideoRequest = {
 export type VideoHealthResponse = {
   healthy: boolean;
   provider: string;
+};
+
+// ===== TYPES UNSPLASH =====
+
+export type UnsplashPhoto = {
+  id: string;
+  urls: {
+    raw: string;
+    full: string;
+    regular: string;
+    small: string;
+    thumb: string;
+  };
+  alt_description: string;
+  description: string;
+  user: {
+    name: string;
+    username: string;
+    portfolio_url: string;
+  };
+  links: {
+    download_location: string;
+  };
+  width: number;
+  height: number;
+};
+
+export type SearchUnsplashResponse = {
+  results: UnsplashPhoto[];
+  total: number;
+  total_pages: number;
+};
+
+export type SaveToGalleryRequest = {
+  unsplashId: string;
+  imageUrl: string;
+  description: string;
+  photographerName: string;
+  photographerUsername: string;
+  tags?: string;
+};
+
+export type GalleryPhoto = {
+  id: string;
+  unsplash_id: string;
+  storage_path: string;
+  image_url: string;
+  description: string;
+  photographer_name: string;
+  photographer_username: string;
+  tags: string;
+  created_at: string;
+  updated_at: string;
 };

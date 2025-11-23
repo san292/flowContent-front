@@ -77,6 +77,9 @@ function formatDate(dateStr?: string | null) {
   }
 }
 
+// Force dynamic rendering to allow data fetching at runtime
+export const dynamic = 'force-dynamic';
+
 export default async function ArticlesIndex() {
   try {
     // ✅ Utilise l'API backend au lieu de Supabase

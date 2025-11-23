@@ -52,10 +52,8 @@ const ArticlesManagement = () => {
 useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/articles`, { cache: "no-store" });
-        if (!res.ok) throw new Error("Erreur API");
-        const json = await res.json();
-        setArticles(json.articles || []);
+        const response = await apiService.getArticles({ limit: 1000 });
+        setArticles(response.articles || []);
       } catch (e) {
         console.error("Erreur lors du chargement des articles:", e);
       } finally {

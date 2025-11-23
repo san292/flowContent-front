@@ -1,6 +1,6 @@
 // lib/config.ts
 export const API_CONFIG = {
-  local: 'http://localhost:4000/api',
+  local: 'http://localhost:8080/api',
   production: 'https://flowcontent-back.fly.dev/api',
 };
 
