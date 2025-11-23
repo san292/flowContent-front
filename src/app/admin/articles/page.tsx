@@ -43,7 +43,7 @@ const ArticlesManagement = () => {
       setSelectedArticleForKit(fullArticle);
     } catch (error) {
       console.error('Erreur lors du chargement de l\'article:', error);
-      showToast('Erreur lors du chargement de l\'article', 'error');
+      showToast('error', 'Erreur lors du chargement de l\'article');
     } finally {
       setLoadingFullArticle(false);
     }
